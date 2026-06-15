@@ -1,0 +1,47 @@
+name: Deploy API to Azure
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ClaimsModule.sln
+
+      - name: Build
+        run: dotnet build ClaimsModule.sln --configuration Release --no-restore
+
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Run migrations
+        run: |
+          for i in 1 2 3; do
+            dotnet ef database update --project ClaimsModule.Persistence/ClaimsModule.Persistence.csproj --startup-project ClaimsModule.API/ClaimsModule.API.csproj --verbose && break
+            echo "Attempt $i failed, retrying in 30 seconds..."
+            sleep 30
+          done
+        env:
+          ConnectionStrings__DefaultConnection: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+          ASPNETCORE_ENVIRONMENT: Production
+
+      - name: Publish
+        run: dotnet publish ClaimsModule.API/ClaimsModule.API.csproj --configuration Release --output ./publish
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: claims-module-api
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish

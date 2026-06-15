@@ -1,0 +1,10 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.db
+uploads/
+appsettings.Development.json
+**/secrets.json
+.idea/
