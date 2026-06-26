@@ -4,14 +4,6 @@ Backend for the Claims Module — a fullstack insurance claims management system
 
 ---
 
-## Live Application
-
-| Resource | URL |
-|---|---|
-| **Swagger UI** | https://claims-module-api-ada7hxafdse6arc5.polandcentral-01.azurewebsites.net/swagger |
-
----
-
 ## Tech Stack
 
 - .NET 9 / ASP.NET Core
